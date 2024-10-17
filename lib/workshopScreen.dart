@@ -1,19 +1,20 @@
-import 'package:firebase/Hackathon_details.dart';
+import 'package:firebase/workshop_details.dart';
 import 'package:firebase/add_project_screen.dart';
 import 'package:firebase/project_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'Hackathon_details.dart';
-import 'AddHackathon.dart';
+import 'workshop_details.dart';
 
-class HackathonScreen extends StatefulWidget {
+import 'Addworkshop.dart';
+
+class workshopScreen extends StatefulWidget {
   @override
-  _HackathonScreenState createState() => _HackathonScreenState();
+  _ShowMaterialScreenState createState() => _ShowMaterialScreenState();
 }
 
-class _HackathonScreenState extends State<HackathonScreen> {
+class _ShowMaterialScreenState extends State<workshopScreen> {
   String searchQuery = '';
   String _userName = 'Loading...';
   String _userEmail = 'Loading...';
@@ -47,12 +48,12 @@ class _HackathonScreenState extends State<HackathonScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Project Hub',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text('Project Hub', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         backgroundColor: Color.fromARGB(214, 193, 184, 184),
       ),
       drawer: _buildDrawer(), // Integrating the drawer here
@@ -67,7 +68,7 @@ class _HackathonScreenState extends State<HackathonScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Discover Hackathons',
+                      'Discover workshops',
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -75,23 +76,23 @@ class _HackathonScreenState extends State<HackathonScreen> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    _buildSearchBar(),
-                    SizedBox(height: 8),
-                    _buildCategoryBar(),
+                    _buildSearchBar(), // Search bar
+                    SizedBox(height: 8), // Reduced space between search bar and category bar
+                    _buildCategoryBar(), // Category bar
                   ],
                 ),
               ),
             ),
             SliverToBoxAdapter(
-              child: SizedBox(height: 0),
+              child: SizedBox(height: 0), // Reduced space between sections
             ),
             SliverFillRemaining(
-              hasScrollBody: true,
+              hasScrollBody: true, // Ensures correct padding behavior
               child: Padding(
-                padding: const EdgeInsets.only(top: 2.0),
+                padding: const EdgeInsets.only(top: 2.0), // Very minimal top padding
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
-                      .collection('hackathon')
+                      .collection('workshop')
                       .orderBy('timestamp', descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
@@ -100,12 +101,12 @@ class _HackathonScreenState extends State<HackathonScreen> {
                     }
 
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return Center(child: Text('No Hackathons added yet.'));
+                      return Center(child: Text('No workshops added yet.'));
                     }
 
                     // Filter the list based on search query
                     final filteredDocs = snapshot.data!.docs.where((doc) {
-                      final title = doc['Hackathon'].toString().toLowerCase();
+                      final title = doc['workshop'].toString().toLowerCase();
                       return title.contains(searchQuery.toLowerCase());
                     }).toList();
 
@@ -115,14 +116,13 @@ class _HackathonScreenState extends State<HackathonScreen> {
                         final material = filteredDocs[index];
                         return GestureDetector(
                           onTap: () {
-                            // Navigate to the HackathonDetailsScreen with the hackathon data
+                            // Navigate to the ProjectDetailsScreen with the project data
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    HackathonDetailsScreen(
-                                      hackathon: material.data() as Map<String, dynamic>, // Pass hackathon data
-                                    ),
+                                builder: (context) => workshopDetailsScreen(
+                                  workshop: material.data() as Map<String, dynamic>, // Pass project data
+                                ),
                               ),
                             );
                           },
@@ -134,7 +134,7 @@ class _HackathonScreenState extends State<HackathonScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    material['Hackathon'],
+                                    material['workshop'],
                                     style: GoogleFonts.poppins(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -142,26 +142,19 @@ class _HackathonScreenState extends State<HackathonScreen> {
                                     ),
                                   ),
                                   SizedBox(height: 8),
-                                  Text(
-                                    material['problemStatement'],
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
+                                  Text(material['topic'],style: TextStyle(color: Colors.grey[600],),),
                                   SizedBox(height: 8),
                                   Text(
-                                    'Team members: ${material['team']},\nMentor: ${material['mentor']}',
+                                    'team members:${material['team']}',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontStyle: FontStyle.italic,
-                                    ),
+                                    ), // Grey italic text
                                   ),
                                   SizedBox(height: 8),
                                   Text(
-                                    'Year of participation: ${material['year']}',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                    ),
+                                    'Year of participation:${material['year']}',
+                                    style: TextStyle(color: Colors.grey[600]), // Grey text
                                   ),
                                 ],
                               ),
@@ -177,7 +170,7 @@ class _HackathonScreenState extends State<HackathonScreen> {
           ],
         ),
       ),
-      floatingActionButton: _buildFloatingActionButton(), // FloatingActionButton for adding new hackathons
+      floatingActionButton: _buildFloatingActionButton(), // FloatingActionButton for adding new projects
     );
   }
 
@@ -188,12 +181,12 @@ class _HackathonScreenState extends State<HackathonScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AddHackathonScreen(),
+            builder: (context) => AddworkshopScreen(),
           ),
         );
       },
       icon: Icon(Icons.add),
-      label: Text('New Hackathon'),
+      label: Text('New workshop'),
       backgroundColor: Color(0xFF303F9F),
     );
   }
@@ -209,7 +202,7 @@ class _HackathonScreenState extends State<HackathonScreen> {
           });
         },
         decoration: InputDecoration(
-          hintText: 'Search Hackathons...',
+          hintText: 'Search workshops...',
           prefixIcon: Icon(Icons.search, color: Colors.white70),
           suffixIcon: Icon(Icons.mic, color: Colors.white70),
           border: OutlineInputBorder(

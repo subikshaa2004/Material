@@ -3,6 +3,7 @@ import 'package:firebase/project_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() {
   runApp(MyApp());
@@ -28,6 +29,38 @@ class ShowMaterialScreen extends StatefulWidget {
 
 class _ShowMaterialScreenState extends State<ShowMaterialScreen> {
   String searchQuery = '';
+  String _userName = 'Loading...';
+  String _userEmail = 'Loading...';
+  String? _userProfilePic;
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData(); // Fetch user data on page load
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      // Assuming user is logged in via FirebaseAuth and you have userId
+      String userId = FirebaseAuth.instance.currentUser!.uid; // Get current user ID
+
+      DocumentSnapshot userSnapshot = await _firestore.collection('users').doc(userId).get();
+      if (userSnapshot.exists) {
+        // Get user details from Firestore document
+        Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
+        setState(() {
+          _userName = userData['name'] ?? 'No Name';
+          _userEmail = userData['email'] ?? 'No Email';
+          _userProfilePic = userData['profilePic'] ?? 'assets/default_profile_pic.jpg'; // Optional: Add default image
+        });
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -237,44 +270,47 @@ class _ShowMaterialScreenState extends State<ShowMaterialScreen> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Color(0xFF3F51B5).withOpacity(0.8),
+                color: const Color(0xFF3F51B5).withOpacity(0.8),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: AssetImage('assets/profile_pic.jpg'),
+                    backgroundImage: _userProfilePic != null
+                        ? NetworkImage(_userProfilePic!) // If image URL is from network
+                        : AssetImage('assets/default_profile_pic.jpg') as ImageProvider, // Default local image
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
-                    'John Doe',
-                    style: GoogleFonts.poppins(color: Colors.white, fontSize: 18),
+                    _userName,
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
                   ),
                   Text(
-                    'john.doe@example.com',
-                    style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
+                    _userEmail,
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],
               ),
             ),
             _buildDrawerItem(Icons.person, 'Profile'),
-            _buildDrawerItem(Icons.settings, 'Settings'),
+            //_buildDrawerItem(Icons.settings, 'Settings'),
             _buildDrawerItem(Icons.info_outline, 'About Us'),
-            _buildDrawerItem(Icons.logout, 'Logout'),
+            _buildDrawerItem(Icons.logout, 'Logout', onTap: () async {
+              await FirebaseAuth.instance.signOut(); // Logout logic
+              Navigator.pushReplacementNamed(context, '/login'); // Navigate back to login screen
+            }),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDrawerItem(IconData icon, String title) {
+  Widget _buildDrawerItem(IconData icon, String title, {Function()? onTap}) {
     return ListTile(
-      leading: Icon(icon, color: Color(0xFF3F51B5)),
-      title: Text(title, style: GoogleFonts.poppins(color: Color(0xFF3F51B5))),
-      onTap: () {
-        // Handle drawer item tap here
-      },
+      leading: Icon(icon, color: const Color(0xFF3F51B5)),
+      title: Text(title, style: const TextStyle(color: Color(0xFF3F51B5))),
+      onTap: onTap ?? () {}, // Handle drawer item tap here
     );
   }
 }

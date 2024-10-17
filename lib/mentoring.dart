@@ -1,454 +1,296 @@
+//import 'package:firebase/mentoring_details.dart';
+import 'package:firebase/add_project_screen.dart';
+import 'package:firebase/project_details_screen.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+//import 'mentoring_details.dart';
+import 'addMentorScreen.dart';
 
-
-class mentoring extends StatelessWidget {
+class mentoringScreen extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mentoring App',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-        colorScheme: ColorScheme.fromSwatch(
-          primarySwatch: Colors.indigo,
-          accentColor: Colors.amber,
-        ),
-        fontFamily: 'Roboto',
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: MentoringPage(),
-    );
-  }
+  _mentoringScreenState createState() => _mentoringScreenState();
 }
 
-class MentoringPage extends StatefulWidget {
-  @override
-  _MentoringPageState createState() => _MentoringPageState();
-}
-
-class _MentoringPageState extends State<MentoringPage> {
+class _mentoringScreenState extends State<mentoringScreen> {
   String searchQuery = '';
-  final List<Map<String, String>> seniors = [
-    {
-      'name': 'John Doe',
-      'email': 'johndoe@example.com',
-      'description': 'Expert in AI and Machine Learning with over 10 years of experience.',
-      'domain': 'AI',
-      'course': 'Computer Science',
-    },
-    {
-      'name': 'Jane Smith',
-      'email': 'janesmith@example.com',
-      'description': 'Specialist in Web Development with a focus on responsive design.',
-      'domain': 'Web Development',
-      'course': 'Information Technology',
-    },
-    {
-      'name': 'Alice Brown',
-      'email': 'alicebrown@example.com',
-      'description': 'Data Scientist with a focus on big data analytics and machine learning.',
-      'domain': 'Data Science',
-      'course': 'Data Science',
-    },
-  ];
+  String _userName = 'Loading...';
+  String _userEmail = 'Loading...';
+  String? _userProfilePic;
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
-  Widget build(BuildContext context) {
-    List<Map<String, String>> filteredSeniors = seniors
-        .where((senior) =>
-    senior['domain']?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false)
-        .toList();
-
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 50.0,
-            floating: false,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
-            bottom: PreferredSize(
-              preferredSize: Size.fromHeight(kToolbarHeight),
-              child: Container(
-                padding: EdgeInsets.only(left: 7, bottom: 30),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'Find Your Mentor',
-                      style: TextStyle(
-                        fontSize: 30,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search by domain',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
-                  });
-                },
-              ),
-            ),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (BuildContext context, int index) {
-                final senior = filteredSeniors[index];
-                return _buildSeniorCard(senior);
-              },
-              childCount: filteredSeniors.length,
-            ),
-          ),
-        ],
-      ),
-    );
+  void initState() {
+    super.initState();
+    _fetchUserData(); // Fetch user data on page load
   }
 
-  Widget _buildSeniorCard(Map<String, String> senior) {
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListTile(
-                leading: CircleAvatar(
-                  child: Icon(Icons.person),
-                  backgroundColor: Colors.grey[200],
-                ),
-                title: Text(
-                  senior['name'] ?? '',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                subtitle: Text(senior['domain'] ?? ''),
-                trailing: IconButton(
-                  icon: Icon(Icons.info_outline),
-                  onPressed: () => _showSeniorDetails(context, senior),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Text(
-                  senior['description'] ?? '',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              SizedBox(height: 40),
-            ],
-          ),
-          Positioned(
-            bottom: 8,
-            right: 8,
-            child: Container(
-              height: 36,
-              width: 80,
-              child: ElevatedButton(
-                onPressed: () => _startChat(context, senior),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.chat_bubble_outline, color: Colors.black, size: 16),
-                    SizedBox(width: 4),
-                    Text(
-                      'CHAT',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo[100],
-                  foregroundColor: Colors.black,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                ).copyWith(
-                  overlayColor: MaterialStateProperty.resolveWith<Color?>(
-                        (Set<MaterialState> states) {
-                      if (states.contains(MaterialState.pressed))
-                        return Colors.indigo[200];
-                      return null;
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Future<void> _fetchUserData() async {
+    try {
+      // Assuming user is logged in via FirebaseAuth and you have userId
+      String userId = FirebaseAuth.instance.currentUser!.uid; // Get current user ID
 
-  void _showSeniorDetails(BuildContext context, Map<String, String> senior) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Container(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: CircleAvatar(
-                    child: Icon(Icons.person, size: 50),
-                    radius: 50,
-                    backgroundColor: Colors.grey[200],
-                  ),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  senior['name'] ?? '',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
-                Text(senior['domain'] ?? '', style: TextStyle(fontSize: 18, color: Colors.grey)),
-                SizedBox(height: 16),
-                Text(senior['description'] ?? ''),
-                SizedBox(height: 16),
-                Text('Email: ${senior['email'] ?? ''}'),
-                Text('Course: ${senior['course'] ?? ''}'),
-                SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text('CLOSE'),
-                    ),
-                    SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        _startChat(context, senior);
-                      },
-                      child: Text('START CHAT'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.secondary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _startChat(BuildContext context, Map<String, String> senior) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ChatPage(senior: senior),
-      ),
-    );
-  }
-}
-
-class ChatPage extends StatefulWidget {
-  final Map<String, String> senior;
-
-  ChatPage({required this.senior});
-
-  @override
-  _ChatPageState createState() => _ChatPageState();
-}
-
-class _ChatPageState extends State<ChatPage> {
-  final List<ChatMessage> _messages = [];
-  final TextEditingController _textController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  final ImagePicker _picker = ImagePicker();
-
-  void _handleSubmitted(String text) {
-    _textController.clear();
-    _addMessage(ChatMessage(text: text, isUser: true));
-  }
-
-  void _handleImageSent(String imagePath) {
-    _addMessage(ChatMessage(imagePath: imagePath, isUser: true));
-  }
-
-  void _addMessage(ChatMessage message) {
-    setState(() {
-      _messages.insert(0, message);
-    });
-    _scrollToBottom();
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0.0,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+      DocumentSnapshot userSnapshot = await _firestore.collection('users').doc(userId).get();
+      if (userSnapshot.exists) {
+        // Get user details from Firestore document
+        Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
+        setState(() {
+          _userName = userData['Name'] ?? 'No Name';
+          _userEmail = userData['email'] ?? 'No Email';
+          _userProfilePic = userData['profilePic'] ?? 'assets/default_profile_pic.jpg'; // Optional: Add default image
+        });
       }
-    });
-  }
-
-  Future<void> _getImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      _handleImageSent(image.path);
+    } catch (e) {
+      print('Error fetching user data: $e');
     }
-  }
-
-  Widget _buildTextComposer() {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 8.0),
-      child: Row(
-        children: <Widget>[
-          IconButton(
-            icon: Icon(Icons.photo),
-            onPressed: _getImage,
-          ),
-          Flexible(
-            child: TextField(
-              controller: _textController,
-              onSubmitted: _handleSubmitted,
-              decoration: InputDecoration(
-                hintText: "Type a message",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.send),
-            onPressed: () => _handleSubmitted(_textController.text),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat with ${widget.senior['name'] ?? ''}'),
-        actions: [
-          CircleAvatar(
-            child: Icon(Icons.person),
-            backgroundColor: Colors.grey[200],
-          ),
-          SizedBox(width: 10),
-        ],
+        title: Text('Project Hub',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        backgroundColor: Color.fromARGB(214, 193, 184, 184),
       ),
-      body: Column(
-        children: <Widget>[
-          Flexible(
-            child: ListView.builder(
-              reverse: true,
-              controller: _scrollController,
-              itemCount: _messages.length,
-              itemBuilder: (_, int index) => _messages[index],
+      drawer: _buildDrawer(), // Integrating the drawer here
+      body: Container(
+        color: Colors.indigo, // Change background color to blue
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Discover mentors',
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    _buildSearchBar(),
+                    SizedBox(height: 8),
+                    _buildCategoryBar(),
+                  ],
+                ),
+              ),
             ),
+            SliverToBoxAdapter(
+              child: SizedBox(height: 0),
+            ),
+            SliverFillRemaining(
+              hasScrollBody: true,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2.0),
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('mentors')
+                      .orderBy('timestamp', descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return Center(child: Text('No mentors added yet.'));
+                    }
+
+                    // Filter the list based on search query
+                    final filteredDocs = snapshot.data!.docs.where((doc) {
+                      final title = doc['mentorName'].toString().toLowerCase();
+                      return title.contains(searchQuery.toLowerCase());
+                    }).toList();
+
+                    return ListView.builder(
+                      itemCount: filteredDocs.length,
+                      itemBuilder: (context, index) {
+                        final material = filteredDocs[index];
+                          child: Card(
+                            margin: EdgeInsets.all(8),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    material['mentorName'],
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.indigo,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    material['contactInfo'],
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Expertise: ${material['domain']}',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Year of experience: ${material['experience']}',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: _buildFloatingActionButton(), // FloatingActionButton for adding new mentorings
+    );
+  }
+
+  // Floating Action Button
+  Widget _buildFloatingActionButton() {
+    return FloatingActionButton.extended(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AddMentorScreen(),
           ),
-          Divider(height: 1.0),
-          Container(
-            decoration: BoxDecoration(color: Theme.of(context).cardColor),
-            child: _buildTextComposer(),
+        );
+      },
+      icon: Icon(Icons.add),
+      label: Text('New mentoring'),
+      backgroundColor: Color(0xFF303F9F),
+    );
+  }
+
+  // Search Bar
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextField(
+        onChanged: (value) {
+          setState(() {
+            searchQuery = value;
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'Search mentors...',
+          prefixIcon: Icon(Icons.search, color: Colors.white70),
+          suffixIcon: Icon(Icons.mic, color: Colors.white70),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none,
           ),
-        ],
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.2),
+          hintStyle: GoogleFonts.poppins(color: Colors.white70),
+        ),
+        style: GoogleFonts.poppins(color: Colors.white),
       ),
     );
   }
-}
 
-class ChatMessage extends StatelessWidget {
-  final String? text;
-  final String? imagePath;
-  final bool isUser;
-
-  ChatMessage({this.text, this.imagePath, required this.isUser});
-
-  @override
-  Widget build(BuildContext context) {
+  // Category Bar
+  Widget _buildCategoryBar() {
+    List<String> categories = ['All', 'AI', 'IoT', 'Mobile', 'Web', 'Blockchain'];
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        children: <Widget>[
-          if (!isUser) ...[
-            CircleAvatar(child: Text('S')),
-            SizedBox(width: 10),
-          ],
-          Flexible(
-            child: Column(
-              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: isUser ? Colors.blue[100] : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: imagePath != null
-                      ? Image.file(
-                    File(imagePath!),
-                    width: 200,
-                    fit: BoxFit.cover,
-                  )
-                      : Text(text ?? ''),
+      height: 40,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: ElevatedButton(
+              onPressed: () {
+                // Handle category filtering here
+              },
+              child: Text(categories[index]),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ],
+              ),
             ),
-          ),
-          if (isUser) ...[
-            SizedBox(width: 10),
-            CircleAvatar(child: Text('U')),
-          ],
-        ],
+          );
+        },
       ),
+    );
+  }
+
+  // Drawer Implementation
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Container(
+        color: Colors.white.withOpacity(0.9),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: const Color(0xFF3F51B5).withOpacity(0.8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundImage: _userProfilePic != null
+                        ? NetworkImage(_userProfilePic!) // If image URL is from network
+                        : AssetImage('assets/default_profile_pic.jpg') as ImageProvider, // Default local image
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _userName,
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                  Text(
+                    _userEmail,
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+            _buildDrawerItem(Icons.person, 'Profile'),
+            _buildDrawerItem(Icons.settings, 'Settings'),
+            _buildDrawerItem(Icons.info_outline, 'About Us'),
+            _buildDrawerItem(Icons.logout, 'Logout', onTap: () async {
+              await FirebaseAuth.instance.signOut(); // Logout logic
+              Navigator.pushReplacementNamed(context, '/login'); // Navigate back to login screen
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(IconData icon, String title, {Function()? onTap}) {
+    return ListTile(
+      leading: Icon(icon, color: const Color(0xFF3F51B5)),
+      title: Text(title, style: const TextStyle(color: Color(0xFF3F51B5))),
+      onTap: onTap ?? () {}, // Handle drawer item tap here
     );
   }
 }
