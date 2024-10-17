@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login_page.dart';
 
 class SignupPage extends StatefulWidget {
@@ -19,14 +20,32 @@ class _SignupPageState extends State<SignupPage> {
   final _yearOfPassoutController = TextEditingController();
   final _descriptionController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> _signup() async {
     try {
-      await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
-      // You can also save additional user information in Firestore or Realtime Database here.
+
+      // Get the current user
+      User? user = userCredential.user;
+
+      if (user != null) {
+        // Save additional user information in Firestore
+        await _firestore.collection('users').doc(user.uid).set({
+          'uid': user.uid,
+          'name': _nameController.text,
+          'email': _emailController.text,
+          'workingStatus': _workingStatusController.text,
+          'course': _courseController.text,
+          'expertiseDomain': _expertiseDomainController.text,
+          'yearOfPassout': _yearOfPassoutController.text,
+          'description': _descriptionController.text,
+        });
+      }
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -43,20 +62,17 @@ class _SignupPageState extends State<SignupPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background Image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/Background_image.jpeg'), // Add your background image here
+                image: AssetImage('assets/Background_image.jpeg'),
                 fit: BoxFit.cover,
               ),
             ),
           ),
-          // Semi-transparent overlay to darken the background
           Container(
             color: Colors.black.withOpacity(0.5),
           ),
-          // Signup Form
           Center(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -65,7 +81,7 @@ class _SignupPageState extends State<SignupPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
-                color: Colors.white.withOpacity(0.9), // Slight transparency for the card
+                color: Colors.white.withOpacity(0.9),
                 child: SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
@@ -75,7 +91,7 @@ class _SignupPageState extends State<SignupPage> {
                         const Text(
                           'Sign Up',
                           style: TextStyle(
-                            fontSize: 32, // Decreased font size
+                            fontSize: 32,
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
                           ),
@@ -90,7 +106,6 @@ class _SignupPageState extends State<SignupPage> {
                             fillColor: Colors.grey.shade200,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              //borderSide: BorderSide.none,
                             ),
                           ),
                         ),
@@ -104,7 +119,6 @@ class _SignupPageState extends State<SignupPage> {
                             fillColor: Colors.grey.shade200,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              //borderSide: BorderSide.none,
                             ),
                           ),
                         ),
@@ -118,7 +132,6 @@ class _SignupPageState extends State<SignupPage> {
                             fillColor: Colors.grey.shade200,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              //borderSide: BorderSide.none,
                             ),
                           ),
                           obscureText: true,
@@ -133,7 +146,6 @@ class _SignupPageState extends State<SignupPage> {
                             fillColor: Colors.grey.shade200,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              //borderSide: BorderSide.none,
                             ),
                           ),
                         ),
@@ -147,7 +159,6 @@ class _SignupPageState extends State<SignupPage> {
                             fillColor: Colors.grey.shade200,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              //borderSide: BorderSide.none,
                             ),
                           ),
                         ),
@@ -161,7 +172,6 @@ class _SignupPageState extends State<SignupPage> {
                             fillColor: Colors.grey.shade200,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              //borderSide: BorderSide.none,
                             ),
                           ),
                         ),
@@ -175,7 +185,6 @@ class _SignupPageState extends State<SignupPage> {
                             fillColor: Colors.grey.shade200,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              //borderSide: BorderSide.none,
                             ),
                           ),
                         ),
@@ -189,31 +198,28 @@ class _SignupPageState extends State<SignupPage> {
                             fillColor: Colors.grey.shade200,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              //borderSide: BorderSide.none,
                             ),
                           ),
-                          maxLines: 3, // Allow multiple lines for description
+                          maxLines: 3,
                         ),
                         const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: _signup,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blueAccent,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 100, vertical: 15),
+                            padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10.0),
                             ),
                           ),
-                          child: const Text('Sign Up',style: TextStyle(color: Colors.white),),
+                          child: const Text('Sign Up', style: TextStyle(color: Colors.white)),
                         ),
                         const SizedBox(height: 10),
                         TextButton(
                           onPressed: () {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(
-                                  builder: (context) => const LoginPage()),
+                              MaterialPageRoute(builder: (context) => const LoginPage()),
                             );
                           },
                           child: const Text(

@@ -1,119 +1,113 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String seniorName;
+  final String chatId;
+  final String teamName; // Add team name to the constructor
 
-  ChatScreen({required this.seniorName});
+  ChatScreen({required this.chatId, required this.teamName});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final List<Map<String, String>> messages = [
-    {'sender': 'You', 'message': 'Hello! I am interested in your project.'},
-    {'sender': 'Senior', 'message': 'Great! Lets discuss the details.'},
-  ];
-
   final TextEditingController _messageController = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late String currentUserId; // Replace with your logic to get the current user ID
+
+  @override
+  void initState() {
+    super.initState();
+    // Set the currentUserId (replace this with your actual logic)
+    currentUserId = "currentUserId"; // Use your authentication logic here
+  }
+
+  void _sendMessage() {
+    final message = _messageController.text.trim();
+    if (message.isNotEmpty) {
+      _firestore.collection('chats').doc(widget.chatId).collection('messages').add({
+        'text': message,
+        'senderId': currentUserId,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      _messageController.clear();
+    }
+  }
+
+  Widget _buildMessage(BuildContext context, DocumentSnapshot message) {
+    final isMe = message['senderId'] == currentUserId;
+
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: isMe ? Colors.blue : Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            Text(
+              isMe ? 'You' : widget.teamName, // Display "You" or team name
+              style: TextStyle(fontWeight: FontWeight.bold, color: isMe ? Colors.white : Colors.black),
+            ),
+            SizedBox(height: 4),
+            Text(
+              message['text'],
+              style: TextStyle(color: isMe ? Colors.white : Colors.black),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Chat with ${widget.seniorName}',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Color(0xFF3F51B5), // Adjust this to match the theme
-        iconTheme: IconThemeData(color: Colors.white),
+        title: Text('Chat with ${widget.teamName}'), // Display team name
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                var message = messages[index];
-                return MessageBubble(
-                  sender: message['sender']!,
-                  message: message['message']!,
-                  isMe: message['sender'] == 'You',
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _firestore.collection('chats').doc(widget.chatId).collection('messages').orderBy('timestamp').snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                final messages = snapshot.data!.docs;
+                return ListView.builder(
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    return _buildMessage(context, messages[index]);
+                  },
                 );
               },
             ),
           ),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _messageController,
                     decoration: InputDecoration(
-                      hintText: 'Type your message...',
-                      hintStyle: TextStyle(color: Color(0xFF3F51B5)), // Typing text color
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                      hintText: 'Type a message...',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                     ),
-                    style: TextStyle(color: Color(0xFF3F51B5)), // Typing text color
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send, color: Color(0xFF3F51B5)), // Typing text color
-                  onPressed: () {
-                    if (_messageController.text.isNotEmpty) {
-                      setState(() {
-                        messages.add({
-                          'sender': 'You',
-                          'message': _messageController.text,
-                        });
-                      });
-                      _messageController.clear();
-                    }
-                  },
+                  icon: Icon(Icons.send),
+                  onPressed: _sendMessage,
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class MessageBubble extends StatelessWidget {
-  final String sender;
-  final String message;
-  final bool isMe;
-
-  MessageBubble({required this.sender, required this.message, required this.isMe});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(10.0),
-      child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Text(
-            sender,
-            style: TextStyle(fontSize: 12.0, color: Colors.black54),
-          ),
-          Material(
-            borderRadius: BorderRadius.circular(15.0),
-            elevation: 5.0,
-            color: isMe ? Color(0xFF3F51B5) : Colors.white, // Use theme color for message bubbles
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-              child: Text(
-                message,
-                style: TextStyle(
-                  color: isMe ? Colors.white : Colors.black,
-                  fontSize: 15.0,
-                ),
-              ),
             ),
           ),
         ],

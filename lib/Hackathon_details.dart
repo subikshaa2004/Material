@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'chat_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HackathonDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> hackathon;
@@ -115,7 +116,7 @@ class HackathonDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Senior Information',
+              'Project Information',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -126,6 +127,7 @@ class HackathonDetailsScreen extends StatelessWidget {
             _buildInfoRow(Icons.person, 'Name', hackathon['team'] ?? 'N/A'),
             //_buildInfoRow(Icons.email, 'Email', hackathon['seniorEmail'] ?? 'N/A'),
             _buildInfoRow(Icons.work, 'Status', hackathon['mentor'] ?? 'N/A'),
+            _buildInfoRow(Icons.work, 'Project Idea Link:', hackathon['ppt'] ?? 'N/A'),
           ],
         ),
       ),
@@ -140,7 +142,26 @@ class HackathonDetailsScreen extends StatelessWidget {
           Icon(icon, color: Color(0xFF3F51B5), size: 20),
           SizedBox(width: 12),
           Expanded(
-            child: Column(
+            child: title == 'Project Idea Link:'
+                ? GestureDetector(
+              onTap: () async {
+                final Uri url = Uri.parse(value);
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url);
+                } else {
+                  throw 'Could not launch $value';
+                }
+              },
+              child: Text(
+                value,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: Colors.blue,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            )
+                : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -190,7 +211,7 @@ class HackathonDetailsScreen extends StatelessWidget {
         ElevatedButton(
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Request sent to ${hackathon['team']}')),
+              SnackBar(content: Text('Request sent to ${hackathon['team'] ?? 'N/A'}')),
             );
           },
           child: Text('Request to Join'),
@@ -205,12 +226,23 @@ class HackathonDetailsScreen extends StatelessWidget {
         SizedBox(height: 16),
         OutlinedButton.icon(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatScreen(seniorName: hackathon['team']!),
-              ),
-            );
+            final teamName = hackathon['team'];
+            final chatId = hackathon['Id']; // Ensure that you have a unique ID
+            if (teamName != null && chatId != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    chatId: hackathon['chatId'] ?? 'defaultChatId', // Provide default value if null
+                    teamName: hackathon['team'] ?? 'Unknown Team', // Provide default value if null
+                  ),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Chat not available.')),
+              );
+            }
           },
           icon: Icon(Icons.chat),
           label: Text('Chat'),

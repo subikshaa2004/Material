@@ -18,7 +18,10 @@ class _AddHackathonScreenState extends State<AddHackathonScreen> {
   String _projectGit = '';
   String _domain = '';
   String _year = '';
-  String _mentor = ''; // Corrected typo: changed from ' ' to ''
+  String _mentor = '';
+  String _ppt='';
+  String _Id='';
+  String _teamId='';// Corrected typo: changed from ' ' to ''
 
   // Add material to Firestore
   Future<void> addHackathon() async {
@@ -32,6 +35,9 @@ class _AddHackathonScreenState extends State<AddHackathonScreen> {
         'domain': _domain,
         'mentor': _mentor,
         'year': _year,
+        'ppt':_ppt,
+        'Id':_Id,
+        'teamTd':_teamId,
         'timestamp': FieldValue.serverTimestamp()
       });
 
@@ -157,7 +163,9 @@ class _AddHackathonScreenState extends State<AddHackathonScreen> {
               _buildTextField('Project Git Hub Link', (value) => _projectGit = value!),
               _buildTextField('Domain', (value) => _domain = value!),
               _buildTextField('Mentor', (value) => _mentor = value!),
-              _buildTextField('Year', (value) => _year = value!), // Corrected label to 'Year'
+              _buildTextField('Year', (value) => _year = value!),
+              _buildTextField('Project Idea ppt', (value) => _ppt = value!),
+              // Corrected label to 'Year'
             ],
           ),
         ),

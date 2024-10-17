@@ -205,12 +205,12 @@ class ProjectDetailsScreen extends StatelessWidget {
         SizedBox(height: 16),
         OutlinedButton.icon(
           onPressed: () {
-            Navigator.push(
+            /*Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ChatScreen(seniorName: project['seniorName']!),
+                //builder: (context) => ChatScreen(seniorName: project['seniorName']!),
               ),
-            );
+            );*/
           },
           icon: Icon(Icons.chat),
           label: Text('Chat'),
