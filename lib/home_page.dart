@@ -8,6 +8,7 @@ import 'ShowMaterialScreen.dart';
 import 'HackathonScreen.dart';
 import 'WorkshopsScreen.dart';
 import 'addMentorScreen.dart';
+import 'mentorScreen.dart';
 import 'mentoring.dart';
 
 void main() {
@@ -204,7 +205,7 @@ class _MainMenuPageState extends State<MainMenuPage> with SingleTickerProviderSt
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AddMentorScreen(),
+                    builder: (context) => AddmentorScreen(),
                   ),
                 );
               }
@@ -221,7 +222,7 @@ class _MainMenuPageState extends State<MainMenuPage> with SingleTickerProviderSt
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => mentoringScreen(),
+                    builder: (context) => mentorScreen(),
                   ),
                 );
               }

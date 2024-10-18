@@ -1,19 +1,19 @@
-/*//import 'package:firebase/mentoring_details.dart';
+import 'package:firebase/mentor_details.dart';
 import 'package:firebase/add_project_screen.dart';
 import 'package:firebase/project_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-//import 'mentoring_details.dart';
+import 'mentor_details.dart';
 import 'addMentorScreen.dart';
 
-class mentoringScreen extends StatefulWidget {
+class mentorScreen extends StatefulWidget {
   @override
-  _mentoringScreenState createState() => _mentoringScreenState();
+  _ShowMaterialScreenState createState() => _ShowMaterialScreenState();
 }
 
-class _mentoringScreenState extends State<mentoringScreen> {
+class _ShowMaterialScreenState extends State<mentorScreen> {
   String searchQuery = '';
   String _userName = 'Loading...';
   String _userEmail = 'Loading...';
@@ -37,7 +37,7 @@ class _mentoringScreenState extends State<mentoringScreen> {
         // Get user details from Firestore document
         Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
         setState(() {
-          _userName = userData['Name'] ?? 'No Name';
+          _userName = userData['name'] ?? 'No Name';
           _userEmail = userData['email'] ?? 'No Email';
           _userProfilePic = userData['profilePic'] ?? 'assets/default_profile_pic.jpg'; // Optional: Add default image
         });
@@ -47,12 +47,12 @@ class _mentoringScreenState extends State<mentoringScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Project Hub',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text('Project Hub', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         backgroundColor: Color.fromARGB(214, 193, 184, 184),
       ),
       drawer: _buildDrawer(), // Integrating the drawer here
@@ -75,20 +75,20 @@ class _mentoringScreenState extends State<mentoringScreen> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    _buildSearchBar(),
-                    SizedBox(height: 8),
-                    _buildCategoryBar(),
+                    _buildSearchBar(), // Search bar
+                    SizedBox(height: 8), // Reduced space between search bar and category bar
+                    _buildCategoryBar(), // Category bar
                   ],
                 ),
               ),
             ),
             SliverToBoxAdapter(
-              child: SizedBox(height: 0),
+              child: SizedBox(height: 0), // Reduced space between sections
             ),
             SliverFillRemaining(
-              hasScrollBody: true,
+              hasScrollBody: true, // Ensures correct padding behavior
               child: Padding(
-                padding: const EdgeInsets.only(top: 2.0),
+                padding: const EdgeInsets.only(top: 2.0), // Very minimal top padding
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('mentors')
@@ -105,7 +105,7 @@ class _mentoringScreenState extends State<mentoringScreen> {
 
                     // Filter the list based on search query
                     final filteredDocs = snapshot.data!.docs.where((doc) {
-                      final title = doc['mentorName'].toString().toLowerCase();
+                      final title = doc['mentor'].toString().toLowerCase();
                       return title.contains(searchQuery.toLowerCase());
                     }).toList();
 
@@ -113,6 +113,18 @@ class _mentoringScreenState extends State<mentoringScreen> {
                       itemCount: filteredDocs.length,
                       itemBuilder: (context, index) {
                         final material = filteredDocs[index];
+                        return GestureDetector(
+                          onTap: () {
+                            // Navigate to the ProjectDetailsScreen with the project data
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => mentorDetailsScreen(
+                                  mentor: material.data() as Map<String, dynamic>, // Pass project data
+                                ),
+                              ),
+                            );
+                          },
                           child: Card(
                             margin: EdgeInsets.all(8),
                             child: Padding(
@@ -121,7 +133,7 @@ class _mentoringScreenState extends State<mentoringScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    material['mentorName'],
+                                    material['mentor'],
                                     style: GoogleFonts.poppins(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -130,29 +142,25 @@ class _mentoringScreenState extends State<mentoringScreen> {
                                   ),
                                   SizedBox(height: 8),
                                   Text(
-                                    material['contactInfo'],
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
+                                    'Organisation:${material['Organisation']}',
+                                    style: TextStyle(color: Colors.grey[600],),),
                                   SizedBox(height: 8),
                                   Text(
-                                    'Expertise: ${material['domain']}',
+                                    'Experience:${material['experience']}',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontStyle: FontStyle.italic,
-                                    ),
+                                    ), // Grey italic text
                                   ),
                                   SizedBox(height: 8),
                                   Text(
-                                    'Year of experience: ${material['experience']}',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                    ),
+                                    'Expertise:${material['domain']}',
+                                    style: TextStyle(color: Colors.grey[600]), // Grey text
                                   ),
                                 ],
                               ),
                             ),
+                          ),
                         );
                       },
                     );
@@ -162,27 +170,11 @@ class _mentoringScreenState extends State<mentoringScreen> {
             ),
           ],
         ),
-      ),
-      floatingActionButton: _buildFloatingActionButton(), // FloatingActionButton for adding new mentorings
+      ), // FloatingActionButton for adding new projects
     );
   }
 
   // Floating Action Button
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton.extended(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AddMentorScreen(),
-          ),
-        );
-      },
-      icon: Icon(Icons.add),
-      label: Text('New mentoring'),
-      backgroundColor: Color(0xFF303F9F),
-    );
-  }
 
   // Search Bar
   Widget _buildSearchBar() {
@@ -278,7 +270,7 @@ class _mentoringScreenState extends State<mentoringScreen> {
             _buildDrawerItem(Icons.info_outline, 'About Us'),
             _buildDrawerItem(Icons.logout, 'Logout', onTap: () async {
               await FirebaseAuth.instance.signOut(); // Logout logic
-              Navigator.pushReplacementNamed(context, '/login'); // Navigate back to login screen
+              Navigator.pushReplacementNamed(context, 'LoginPage()'); // Navigate back to login screen
             }),
           ],
         ),
@@ -293,4 +285,4 @@ class _mentoringScreenState extends State<mentoringScreen> {
       onTap: onTap ?? () {}, // Handle drawer item tap here
     );
   }
-}*/
+}

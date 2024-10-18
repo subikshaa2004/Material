@@ -1,47 +1,53 @@
-import 'package:firebase/workshopScreen.dart';
+import 'package:firebase/mentorScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'ShowMaterialScreen.dart'; // Import your ShowMaterialScreen
 
-class AddMentorScreen extends StatefulWidget {
+class AddmentorScreen extends StatefulWidget {
   @override
-  _AddMentorScreenState createState() => _AddMentorScreenState();
+  _AddmentorScreenState createState() => _AddmentorScreenState();
 }
 
-class _AddMentorScreenState extends State<AddMentorScreen> {
+class _AddmentorScreenState extends State<AddmentorScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _mentorName = '';
-  String _expertise = '';
-  String _availability = '';
-  String _contactInfo = '';
-  String _linkedin = '';
-  String _domain = '';
+  String _mentor = '';
+  String _Organisation = '';
   String _experience = '';
-  String _preferredMode = '';
+  //String _projectGit = '';
+  String _domain = '';
+  String _availability = '';
+  //String _ppt='';
+  //String _Id='';
+  //String _teamId='';// Corrected typo: changed from ' ' to ''
 
-  // Add mentor details to Firestore
-  Future<void> addMentor() async {
+  // Add material to Firestore
+  Future<void> addmentor() async {
     try {
       await FirebaseFirestore.instance.collection('mentors').add({
-        'mentorName': _mentorName,
-        'expertise': _expertise,
-        'availability': _availability,
-        'contactInfo': _contactInfo,
-        'linkedin': _linkedin,
-        'domain': _domain,
+        'mentor': _mentor,
+        'Organisation': _Organisation,
+        //'topic': _topic,
         'experience': _experience,
-        'preferredMode': _preferredMode,
-        'timestamp': FieldValue.serverTimestamp(),
+        //'projectGit': _projectGit,
+        'domain': _domain,
+        //'year': _year,
+       // 'ppt':_ppt,
+        //'Id':_Id,
+        //'teamTd':_teamId,
+        'timestamp': FieldValue.serverTimestamp()
       });
 
       // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Mentor details added successfully')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('mentor added successfully')));
+
+      // Navigate to ShowMaterialScreen
+      /*Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => mentorScreen()),
+      );*/
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
   }
 
@@ -98,7 +104,7 @@ class _AddMentorScreenState extends State<AddMentorScreen> {
               left: 20,
               bottom: 20,
               child: Text(
-                'Add Mentor Details',
+                'Add mentor',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.bold,
                   fontSize: 22,
@@ -139,7 +145,7 @@ class _AddMentorScreenState extends State<AddMentorScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Mentor Information',
+                'Material Information',
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -147,14 +153,16 @@ class _AddMentorScreenState extends State<AddMentorScreen> {
                 ),
               ),
               SizedBox(height: 16),
-              _buildTextField('Mentor Name', (value) => _mentorName = value!),
-              _buildTextField('Expertise', (value) => _expertise = value!),
-              _buildTextField('Availability', (value) => _availability = value!),
-              _buildTextField('Contact Info', (value) => _contactInfo = value!),
-              _buildTextField('LinkedIn Profile', (value) => _linkedin = value!),
-              _buildTextField('Domain', (value) => _domain = value!),
-              _buildTextField('Years of Experience', (value) => _experience = value!),
-              _buildTextField('Preferred Mode (Online/Offline)', (value) => _preferredMode = value!),
+              _buildTextField('mentor', (value) => _mentor = value!),
+              _buildTextField('Organisation', (value) => _Organisation = value!),
+              //_buildTextField('Topic', (value) => _topic = value!),
+             // _buildTextField('Team members', (value) => _team = value!),
+             // _buildTextField('Project Git Hub Link', (value) => _projectGit = value!),
+              _buildTextField('Expertise', (value) => _domain = value!),
+              _buildTextField('Experience', (value) => _experience = value!),
+             // _buildTextField('Year', (value) => _year = value!),
+             // _buildTextField('mentor material', (value) => _ppt = value!),
+              // Corrected label to 'Year'
             ],
           ),
         ),
@@ -175,7 +183,7 @@ class _AddMentorScreenState extends State<AddMentorScreen> {
       onPressed: () async {
         if (_formKey.currentState!.validate()) {
           _formKey.currentState!.save();
-          await addMentor(); // Call the function to add mentor details
+          await addmentor(); // Call the function to add material
         }
       },
       child: Text('Submit'),
